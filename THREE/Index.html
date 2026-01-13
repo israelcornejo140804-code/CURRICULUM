@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Galería Currículum 3D - Israel Cornejo</title>
+<style>
+body { margin:0; overflow:hidden; background:#0f172a; }
+</style>
+</head>
+<body>
+
+<canvas id="myCanvas"></canvas>
+
+<div id="playAudio"
+style="
+position:fixed;
+bottom:20px;
+right:20px;
+padding:10px 18px;
+background:#1e40af;
+color:white;
+font-family:Arial;
+border-radius:20px;
+cursor:pointer;
+z-index:10;
+">
+▶ Música
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./js/three.module.js",
+    "three/OrbitControls": "./js/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/OrbitControls';
+
+//// RENDERER
+const renderer = new THREE.WebGLRenderer({ canvas: myCanvas, antialias:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x0f172a);
+
+//// SCENE & CAMERA
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0,2,20);
+
+//// CONTROLS
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enablePan = false;
+
+//// LIGHTS
+scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+const spot = new THREE.SpotLight(0x60a5fa, 1.4);
+spot.position.set(0,10,5);
+scene.add(spot);
+
+//// FONDO
+const bg = document.createElement("canvas");
+bg.width = 512; bg.height = 512;
+const gctx = bg.getContext("2d");
+const grad = gctx.createLinearGradient(0,0,512,512);
+grad.addColorStop(0,"#020617");
+grad.addColorStop(1,"#1e3a8a");
+gctx.fillStyle = grad;
+gctx.fillRect(0,0,512,512);
+
+const bgPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(140,70),
+  new THREE.MeshBasicMaterial({ map:new THREE.CanvasTexture(bg) })
+);
+bgPlane.position.z = -30;
+scene.add(bgPlane);
+
+//// CUADRO TEXTO
+function crearCuadroTexto(texto, x) {
+  const group = new THREE.Group();
+
+  const marco = new THREE.Mesh(
+    new THREE.BoxGeometry(6.6,3.6,0.3),
+    new THREE.MeshStandardMaterial({ color:0x1e40af })
+  );
+  group.add(marco);
+
+  const c = document.createElement("canvas");
+  c.width=1024; c.height=512;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle="#020617";
+  ctx.fillRect(0,0,c.width,c.height);
+  ctx.fillStyle="#93c5fd";
+  ctx.font="bold 32px Arial";
+  texto.split("\n").forEach((l,i)=>{
+    ctx.fillText(l,40,90+i*44);
+  });
+
+  const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(6,3),
+    new THREE.MeshBasicMaterial({ map:new THREE.CanvasTexture(c) })
+  );
+  plane.position.z=0.17;
+  group.add(plane);
+
+  group.position.set(x,2,0);
+  scene.add(group);
+  return group;
+}
+
+//// CUADRO IMAGEN
+function crearCuadroImagen(url, x, y) {
+  const tex = new THREE.TextureLoader().load(url);
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(6.6,3.6,0.3),
+    new THREE.MeshStandardMaterial({ color:0x020617 })
+  );
+  const img = new THREE.Mesh(
+    new THREE.PlaneGeometry(6,3),
+    new THREE.MeshBasicMaterial({ map:tex })
+  );
+  img.position.z=0.17;
+  const g = new THREE.Group();
+  g.add(frame,img);
+  g.position.set(x,y,0);
+  scene.add(g);
+  return g;
+}
+
+//// 🔵 CUADROS TEXTO
+const cuadrosTexto=[];
+cuadrosTexto.push(crearCuadroTexto(
+"DATOS PERSONALES\n\nIsrael Cornejo\nIngeniería en Comunicación Multimedia\nCreativo audiovisual y musical\n5530129506",
+-14));
+
+cuadrosTexto.push(crearCuadroTexto(
+"PERFIL PROFESIONAL\n\nDiseño\nEdición\nProducción audiovisual\nCreador de contenido musical",
+-7));
+
+cuadrosTexto.push(crearCuadroTexto(
+"FORMACIÓN\n\nUNEVE\n2022 - Actualidad",
+0));
+
+cuadrosTexto.push(crearCuadroTexto(
+"SOFTWARE\n\nPhotoshop 80%\nPremiere 60%\nAfter Effects 60%\nBlender 80%\nIlustrator 80%",
+7));
+
+cuadrosTexto.push(crearCuadroTexto(
+"EXPERIENCIA\n\nProyectos académicos\nProducción multimedia\nAdministracion de Redes Sociales para microempresas",
+14));
+
+//// 🖼️ CUADROS IMAGEN
+const cuadrosImg=[];
+cuadrosImg.push(crearCuadroImagen("./img/musica1.jpeg",-7,6));
+cuadrosImg.push(crearCuadroImagen("./img/musica2.jpeg",7,6));
+cuadrosImg.push(crearCuadroImagen("./img/musica3.jpeg",-7,-3));
+cuadrosImg.push(crearCuadroImagen("./img/musica4.jpeg",7,-3));
+
+//// 🎶 DISCOS MUSICALES
+const discs=[];
+for(let i=0;i<5;i++){
+  const d = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.8,0.8,0.1,32),
+    new THREE.MeshStandardMaterial({ color:0x60a5fa })
+  );
+  d.rotation.x=Math.PI/2;
+  d.position.set((i-2)*4, -6, 1);
+  scene.add(d);
+  discs.push(d);
+}
+
+//// 🎚️ BARRA DE MÚSICA
+const bars=[];
+const totalBars = 16;
+
+for(let i=0;i<totalBars;i++){
+  const bar = new THREE.Mesh(
+    new THREE.BoxGeometry(0.35,1,0.35),
+    new THREE.MeshStandardMaterial({ color:0x38bdf8 })
+  );
+  bar.position.set(
+    i*0.5 - (totalBars*0.25),
+    -8,
+    1
+  );
+  scene.add(bar);
+  bars.push(bar);
+}
+
+//// 🎬 ANIMACIÓN
+let t=0;
+function animate(){
+  t+=0.01;
+
+  [...cuadrosTexto, ...cuadrosImg].forEach(c=>{
+    c.rotation.y=Math.sin(t)*0.04;
+  });
+
+  discs.forEach(d=> d.rotation.z+=0.03);
+
+  bars.forEach((b,i)=>{
+    b.scale.y = Math.abs(Math.sin(t*2 + i))*2 + 0.3;
+  });
+
+  controls.update();
+  renderer.render(scene,camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+//// RESPONSIVE
+window.addEventListener("resize",()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+//// 🎧 AUDIO AMBIENTAL (EDGE SAFE)
+let sound, listener, audioLoader;
+
+const btn = document.getElementById("playAudio");
+
+btn.addEventListener("click", () => {
+
+  if (!listener) {
+    listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    sound = new THREE.Audio(listener);
+    audioLoader = new THREE.AudioLoader();
+
+    audioLoader.load(
+      './audio/musica.mp3',
+      function (buffer) {
+        sound.setBuffer(buffer);
+        sound.setLoop(true);
+        sound.setVolume(0.8);
+        sound.play();
+        btn.innerText = "⏸ Música";
+        console.log("🎵 Audio iniciado");
+      },
+      undefined,
+      function (err) {
+        console.error("❌ Error cargando audio", err);
+      }
+    );
+  } else {
+    if (sound.isPlaying) {
+      sound.pause();
+      btn.innerText = "▶ Música";
+    } else {
+      sound.play();
+      btn.innerText = "⏸ Música";
+    }
+  }
+
+});
+
+
+</script>
+</body>
+</html>
